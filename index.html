@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Expense Tracker Wireframes</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #f5e6d3 0%, #e8c5a0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .wireframe-container {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 1200px;
+        }
+        
+        .phone-mockup {
+            width: 320px;
+            height: 640px;
+            background: #1a1a1a;
+            border-radius: 30px;
+            padding: 8px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            position: relative;
+        }
+        
+        .screen {
+            width: 100%;
+            height: 100%;
+            background: white;
+            border-radius: 22px;
+            overflow: hidden;
+            position: relative;
+            display: none;
+        }
+        
+        .screen.active {
+            display: block;
+        }
+        
+        .status-bar {
+            height: 30px;
+            background: #f8f8f8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .header {
+            background: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .header-icon {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .summary-cards {
+            background: linear-gradient(135deg, #ff9a56, #ffa726);
+            padding: 20px;
+            margin: 20px;
+            border-radius: 16px;
+            display: flex;
+            justify-content: space-around;
+            color: white;
+            box-shadow: 0 4px 12px rgba(255, 154, 86, 0.3);
+        }
+        
+        .summary-card {
+            text-align: center;
+        }
+        
+        .summary-card h3 {
+            font-size: 12px;
+            opacity: 0.9;
+            margin-bottom: 4px;
+        }
+        
+        .summary-card p {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .date-section {
+            padding: 15px 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .date-section h2 {
+            font-size: 16px;
+            color: #333;
+        }
+        
+        .daily-total {
+            font-size: 12px;
+            color: #666;
+        }
+        
+        .transaction-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .transaction-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            background: #ffeaa7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 18px;
+        }
+        
+        .transaction-details {
+            flex: 1;
+        }
+        
+        .transaction-name {
+            font-weight: 500;
+            color: #333;
+            margin-bottom: 2px;
+        }
+        
+        .transaction-budget {
+            font-size: 11px;
+            color: #999;
+        }
+        
+        .transaction-amount {
+            font-weight: 600;
+            color: #333;
+        }
+        
+        .transaction-amount.negative {
+            color: #e74c3c;
+        }
+        
+        .transaction-amount.positive {
+            color: #27ae60;
+        }
+        
+        .bottom-nav {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: white;
+            border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            cursor: pointer;
+            transition: color 0.2s;
+            font-size: 10px;
+            color: #999;
+        }
+        
+        .nav-item.active {
+            color: #ff9a56;
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+        }
+        
+        .fab {
+            position: absolute;
+            bottom: 80px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff9a56, #ffa726);
+            border: none;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(255, 154, 86, 0.4);
+            transition: transform 0.2s;
+        }
+        
+        .fab:hover {
+            transform: scale(1.1);
+        }
+        
+        .form-container {
+            padding: 20px;
+            flex: 1;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #ff9a56;
+        }
+        
+        .category-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .category-item {
+            aspect-ratio: 1;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 10px;
+            text-align: center;
+        }
+        
+        .category-item:hover, .category-item.selected {
+            border-color: #ff9a56;
+            background: #fff5f0;
+        }
+        
+        .category-icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .btn-primary {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #ff9a56, #ffa726);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+        
+        .screen-controls {
+            position: absolute;
+            top: -50px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .screen-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .screen-btn.active {
+            background: #ff9a56;
+            color: white;
+            border-color: #ff9a56;
+        }
+        
+        .chart-placeholder {
+            height: 200px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            margin: 20px;
+        }
+        
+        .budget-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .budget-progress {
+            flex: 1;
+            margin: 0 12px;
+        }
+        
+        .budget-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .progress-bar {
+            height: 6px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-bottom: 4px;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff9a56, #ffa726);
+            border-radius: 3px;
+            transition: width 0.3s;
+        }
+        
+        .budget-amounts {
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="wireframe-container">
+        <div class="phone-mockup">
+            <div class="screen-controls">
+                <button class="screen-btn active" onclick="showScreen('home')">Home</button>
+                <button class="screen-btn" onclick="showScreen('add')">Add Expense</button>
+                <button class="screen-btn" onclick="showScreen('reports')">Reports</button>
+                <button class="screen-btn" onclick="showScreen('budget')">Budget</button>
+            </div>
+            
+            <!-- Home Screen -->
+            <div class="screen active" id="home">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>●●●●● WiFi 📶 100%</span>
+                </div>
+                
+                <div class="header">
+                    <div class="header-icon">☰</div>
+                    <h1>Home</h1>
+                    <div style="display: flex; gap: 10px;">
+                        <div class="header-icon">🔍</div>
+                        <div class="header-icon">📅</div>
+                    </div>
+                </div>
+                
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h3>Expenses</h3>
+                        <p>3,000</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Income</h3>
+                        <p>60,000</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Balance</h3>
+                        <p>57,000</p>
+                    </div>
+                </div>
+                
+                <div class="date-section">
+                    <h2>📅 14 August 2024</h2>
+                    <div class="daily-total">Daily Expenses: 3000</div>
+                </div>
+                
+                <div class="transaction-list">
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🍟</div>
+                        <div class="transaction-details">
+                            <div class="transaction-name">Fries</div>
+                            <div class="transaction-budget">Budget: PKR 10,000 | Remaining: PKR 9,500</div>
+                        </div>
+                        <div class="transaction-amount negative">-500</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🚲</div>
+                        <div class="transaction-details">
+                            <div class="transaction-name">Bike Petrol</div>
+                            <div class="transaction-budget">Budget: PKR 10,000 | Remaining: PKR 8,500</div>
+                        </div>
+                        <div class="transaction-amount negative">-1,500</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon">👖</div>
+                        <div class="transaction-details">
+                            <div class="transaction-name">Pants</div>
+                            <div class="transaction-budget">Budget: PKR 5,000 | Remaining: PKR 4,000</div>
+                        </div>
+                        <div class="transaction-amount negative">-1,000</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon">👤</div>
+                        <div class="transaction-details">
+                            <div class="transaction-name">Salary</div>
+                            <div class="transaction-budget">Monthly Income</div>
+                        </div>
+                        <div class="transaction-amount positive">60,000</div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item active">
+                        <div class="nav-icon">🏠</div>
+                        <span>Home</span>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('reports')">
+                        <div class="nav-icon">📊</div>
+                        <span>Reports</span>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('budget')">
+                        <div class="nav-icon">💰</div>
+                        <span>Budget</span>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">💳</div>
+                        <span>Wallets</span>
+                    </div>
+                </div>
+                
+                <button class="fab" onclick="showScreen('add')">+</button>
+            </div>
+            
+            <!-- Add Expense Screen -->
+            <div class="screen" id="add">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>●●●●● WiFi 📶 100%</span>
+                </div>
+                
+                <div class="header">
+                    <div class="header-icon" onclick="showScreen('home')">←</div>
+                    <h1>Add Expense</h1>
+                    <div class="header-icon">💾</div>
+                </div>
+                
+                <div class="form-container">
+                    <div class="form-group">
+                        <label class="form-label">Amount</label>
+                        <input type="number" class="form-input" placeholder="0.00" value="1200">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description</label>
+                        <input type="text" class="form-input" placeholder="What did you spend on?" value="Lunch at restaurant">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <div class="category-grid">
+                            <div class="category-item selected">
+                                <div class="category-icon">🍽️</div>
+                                <span>Food</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🚗</div>
+                                <span>Transport</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🛍️</div>
+                                <span>Shopping</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🏥</div>
+                                <span>Health</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">🎬</div>
+                                <span>Entertainment</span>
+                            </div>
+                            <div class="category-item">
+                                <div class="category-icon">📱</div>
+                                <span>Bills</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Date</label>
+                        <input type="date" class="form-input" value="2024-08-14">
+                    </div>
+                    
+                    <button class="btn-primary" onclick="showScreen('home')">Add Expense</button>
+                </div>
+            </div>
+            
+            <!-- Reports Screen -->
+            <div class="screen" id="reports">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>●●●●● WiFi 📶 100%</span>
+                </div>
+                
+                <div class="header">
+                    <div class="header-icon">☰</div>
+                    <h1>Reports</h1>
+                    <div class="header-icon">📅</div>
+                </div>
+                
+                <div class="chart-placeholder">
+                    📈 Spending Trends Chart
+                    <br><small>Interactive charts showing monthly/weekly spending patterns</small>
+                </div>
+                
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h3>This Month</h3>
+                        <p>₹25,430</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Last Month</h3>
+                        <p>₹18,250</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Average</h3>
+                        <p>₹21,840</p>
+                    </div>
+                </div>
+                
+                <div class="transaction-list">
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🍽️</div>
+                        <div class="transaction-details">
+                            <div class="transaction-name">Food & Dining</div>
+                            <div class="transaction-budget">45% of total spending</div>
+                        </div>
+                        <div class="transaction-amount">₹11,450</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🚗</div>
+                        <div class="transaction-details">
+                            <div class="transaction-name">Transportation</div>
+                            <div class="transaction-budget">25% of total spending</div>
+                        </div>
+                        <div class="transaction-amount">₹6,350</div>
+                    </div>
+                    
+                    <div class="transaction-item">
+                        <div class="transaction-icon">🛍️</div>
+                        <div class="transaction-details">
+                            <div class="transaction-name">Shopping</div>
+                            <div class="transaction-budget">20% of total spending</div>
+                        </div>
+                        <div class="transaction-amount">₹5,080</div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item" onclick="showScreen('home')">
+                        <div class="nav-icon">🏠</div>
+                        <span>Home</span>
+                    </div>
+                    <div class="nav-item active">
+                        <div class="nav-icon">📊</div>
+                        <span>Reports</span>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('budget')">
+                        <div class="nav-icon">💰</div>
+                        <span>Budget</span>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">💳</div>
+                        <span>Wallets</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Budget Screen -->
+            <div class="screen" id="budget">
+                <div class="status-bar">
+                    <span>9:41</span>
+                    <span>●●●●● WiFi 📶 100%</span>
+                </div>
+                
+                <div class="header">
+                    <div class="header-icon">☰</div>
+                    <h1>Budget</h1>
+                    <div class="header-icon">➕</div>
+                </div>
+                
+                <div class="summary-cards">
+                    <div class="summary-card">
+                        <h3>Total Budget</h3>
+                        <p>₹50,000</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Spent</h3>
+                        <p>₹25,430</p>
+                    </div>
+                    <div class="summary-card">
+                        <h3>Remaining</h3>
+                        <p>₹24,570</p>
+                    </div>
+                </div>
+                
+                <div class="transaction-list">
+                    <div class="budget-item">
+                        <div class="transaction-icon">🍽️</div>
+                        <div class="budget-progress">
+                            <div class="budget-name">Food & Dining</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 76%"></div>
+                            </div>
+                            <div class="budget-amounts">₹11,450 of ₹15,000</div>
+                        </div>
+                        <div class="transaction-amount">76%</div>
+                    </div>
+                    
+                    <div class="budget-item">
+                        <div class="transaction-icon">🚗</div>
+                        <div class="budget-progress">
+                            <div class="budget-name">Transportation</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 64%"></div>
+                            </div>
+                            <div class="budget-amounts">₹6,350 of ₹10,000</div>
+                        </div>
+                        <div class="transaction-amount">64%</div>
+                    </div>
+                    
+                    <div class="budget-item">
+                        <div class="transaction-icon">🛍️</div>
+                        <div class="budget-progress">
+                            <div class="budget-name">Shopping</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 51%"></div>
+                            </div>
+                            <div class="budget-amounts">₹5,080 of ₹10,000</div>
+                        </div>
+                        <div class="transaction-amount">51%</div>
+                    </div>
+                    
+                    <div class="budget-item">
+                        <div class="transaction-icon">🎬</div>
+                        <div class="budget-progress">
+                            <div class="budget-name">Entertainment</div>
+                            <div class="progress-bar">
+                                <div class="progress-fill" style="width: 30%"></div>
+                            </div>
+                            <div class="budget-amounts">₹1,500 of ₹5,000</div>
+                        </div>
+                        <div class="transaction-amount">30%</div>
+                    </div>
+                </div>
+                
+                <div class="bottom-nav">
+                    <div class="nav-item" onclick="showScreen('home')">
+                        <div class="nav-icon">🏠</div>
+                        <span>Home</span>
+                    </div>
+                    <div class="nav-item" onclick="showScreen('reports')">
+                        <div class="nav-icon">📊</div>
+                        <span>Reports</span>
+                    </div>
+                    <div class="nav-item active">
+                        <div class="nav-icon">💰</div>
+                        <span>Budget</span>
+                    </div>
+                    <div class="nav-item">
+                        <div class="nav-icon">💳</div>
+                        <span>Wallets</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        function showScreen(screenId) {
+            // Hide all screens
+            document.querySelectorAll('.screen').forEach(screen => {
+                screen.classList.remove('active');
+            });
+            
+            // Show selected screen
+            document.getElementById(screenId).classList.add('active');
+            
+            // Update button states
+            document.querySelectorAll('.screen-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            event.target.classList.add('active');
+            
+            // Update nav states
+            document.querySelectorAll('.nav-item').forEach(nav => {
+                nav.classList.remove('active');
+            });
+        }
+        
+        // Add click handlers for category selection
+        document.querySelectorAll('.category-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.category-item').forEach(cat => {
+                    cat.classList.remove('selected');
+                });
+                this.classList.add('selected');
+            });
+        });
+    </script>
+</body>
+</html>
