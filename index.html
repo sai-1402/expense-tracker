@@ -146,17 +146,26 @@
                 await setPersistence(auth, browserLocalPersistence);
 
                 onAuthStateChanged(auth, async (user) => {
-                    renderAuthUI(user);
-                    if (user) {
-                        userId = user.uid;
-                        document.getElementById('userIdDisplay').textContent = userId;
-                        await setupInitialData();
-                        setupListeners();
-                        showPage('home'); 
-                    } else {
-                        // GoogleサインインUIを表示し、匿名サインインは行わない
-                    }
-                });
+    renderAuthUI(user);
+    if (user) {
+        userId = user.uid;
+        document.getElementById('userIdDisplay').textContent = userId;
+        await setupInitialData();
+        setupListeners();
+        showPage('home');
+    } else {
+        userId = null; // Set userId to null when logged out
+        // GoogleサインインUIを表示し、匿名サインインは行わない
+        showModal('Authentication Required', '<p>Please sign in to use the Expense Tracker.</p>');
+        document.getElementById('userIdDisplay').textContent = 'Not Signed In'; // Update UI
+        // Unsubscribe from listeners and clear local data
+        if (unsubscribeTransactions) unsubscribeTransactions();
+        if (unsubscribeBudgets) unsubscribeBudgets();
+        transactions = []; // Clear local transactions data
+        budgets = {}; // Clear local budgets data
+        renderAllPages(); // Re-render to show empty state or login prompt
+    }
+});
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
                 showModal('Initialization Error', `<p>Could not connect to the database. Please check the console for more details.</p>`);
@@ -352,6 +361,10 @@
 
         async function handleSaveTransaction(event) {
             event.preventDefault();
+            if (!userId) { // If userId is not set (user not logged in)
+        showModal('Authentication Required', '<p>Please sign in to add transactions.</p>');
+        return; // Stop the function execution
+    }
             const form = event.target;
             const transactionId = form.dataset.id;
             const formData = new FormData(form);
@@ -525,25 +538,36 @@
         }
 
         function showPage(pageName, data = {}) {
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            const pageId = `${pageName}-page`;
-            const pageElement = document.getElementById(pageId);
-            const navElement = document.querySelector(`.nav-item[onclick="showPage('${pageName}')"]`);
-            if (pageElement) {
-                pageElement.classList.add('active');
-                if(pageName === 'home') renderHomePage();
-                else if(pageName === 'add') renderAddPage(data);
-                else if(pageName === 'scan') renderScanPage();
-                else if(pageName === 'budget') renderBudgetPage();
-            }
-            if(navElement) navElement.classList.add('active');
-            let titleText = 'Home';
-            if (pageName === 'add') titleText = data.id ? 'Edit Transaction' : 'Add Transaction';
-            else if (pageName !== 'home') titleText = pageName.charAt(0).toUpperCase() + pageName.slice(1);
-            document.getElementById('page-title').textContent = titleText;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+    const pageId = `${pageName}-page`;
+    const pageElement = document.getElementById(pageId);
+    const navElement = document.querySelector(`.nav-item[onclick="showPage('${pageName}')"]`);
+
+    if (pageElement) {
+        pageElement.classList.add('active');
+        // Always call the specific render function to refresh content
+        if(pageName === 'home') {
+            renderHomePage();
+        } else if(pageName === 'add') {
+            renderAddPage(data);
+        } else if(pageName === 'scan') {
+            renderScanPage();
+        } else if(pageName === 'budget') {
+            renderBudgetPage();
         }
-        window.showPage = showPage;
+    }
+
+    if(navElement) navElement.classList.add('active');
+
+    let titleText = 'Home';
+    if (pageName === 'add') titleText = data.id ? 'Edit Transaction' : 'Add Transaction';
+    else if (pageName !== 'home') titleText = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+    document.getElementById('page-title').textContent = titleText;
+}
+window.showPage = showPage;
+        window.showPage = showPage; // Keep this for global access
 
         function showModal(title, content, showCloseButton = true) {
             const modal = document.getElementById('modal');
