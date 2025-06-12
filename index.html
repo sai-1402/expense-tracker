@@ -93,7 +93,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, collection, addDoc, getDocs, onSnapshot, query, writeBatch, Timestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- 1. PASTE YOUR CONFIG & API KEY HERE ---
@@ -120,8 +120,6 @@
         let app, auth, db, userId;
         let transactions = [];
         let budgets = {};
-        let unsubscribeTransactions = null;
-        let unsubscribeBudgets = null;
         
         const CATEGORIES = {
             'Food': { icon: '🍽️', type: 'expense' },
@@ -146,26 +144,16 @@
                 await setPersistence(auth, browserLocalPersistence);
 
                 onAuthStateChanged(auth, async (user) => {
-    renderAuthUI(user);
-    if (user) {
-        userId = user.uid;
-        document.getElementById('userIdDisplay').textContent = userId;
-        await setupInitialData();
-        setupListeners();
-        showPage('home');
-    } else {
-        userId = null; // Set userId to null when logged out
-        // GoogleサインインUIを表示し、匿名サインインは行わない
-        showModal('Authentication Required', '<p>Please sign in to use the Expense Tracker.</p>');
-        document.getElementById('userIdDisplay').textContent = 'Not Signed In'; // Update UI
-        // Unsubscribe from listeners and clear local data
-        if (unsubscribeTransactions) unsubscribeTransactions();
-        if (unsubscribeBudgets) unsubscribeBudgets();
-        transactions = []; // Clear local transactions data
-        budgets = {}; // Clear local budgets data
-        renderAllPages(); // Re-render to show empty state or login prompt
-    }
-});
+                    if (user) {
+                        userId = user.uid;
+                        document.getElementById('userIdDisplay').textContent = userId;
+                        await setupInitialData();
+                        setupListeners();
+                        showPage('home'); 
+                    } else {
+                        await signInAnonymously(auth);
+                    }
+                });
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
                 showModal('Initialization Error', `<p>Could not connect to the database. Please check the console for more details.</p>`);
@@ -189,13 +177,9 @@
         }
         
         function setupListeners() {
-            // 既存リスナーがあれば解除
-            if (typeof unsubscribeTransactions === 'function') unsubscribeTransactions();
-            if (typeof unsubscribeBudgets === 'function') unsubscribeBudgets();
-
             const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
             const qTransactions = query(collection(db, transactionsPath));
-            unsubscribeTransactions = onSnapshot(qTransactions, (snapshot) => {
+            onSnapshot(qTransactions, (snapshot) => {
                 transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 transactions.sort((a, b) => b.date.toMillis() - a.date.toMillis());
                 renderAllPages();
@@ -203,7 +187,7 @@
 
             const budgetsPath = `/artifacts/${appId}/users/${userId}/budgets`;
             const qBudgets = query(collection(db, budgetsPath));
-            unsubscribeBudgets = onSnapshot(qBudgets, (snapshot) => {
+            onSnapshot(qBudgets, (snapshot) => {
                 budgets = {};
                 snapshot.docs.forEach(doc => {
                     budgets[doc.data().name] = { id: doc.id, ...doc.data() };
@@ -361,10 +345,6 @@
 
         async function handleSaveTransaction(event) {
             event.preventDefault();
-            if (!userId) { // If userId is not set (user not logged in)
-        showModal('Authentication Required', '<p>Please sign in to add transactions.</p>');
-        return; // Stop the function execution
-    }
             const form = event.target;
             const transactionId = form.dataset.id;
             const formData = new FormData(form);
@@ -400,47 +380,6 @@
             }
         }
         
-        function renderAuthUI(user) {
-            const userInfoDiv = document.getElementById('user-info');
-            if (!user) {
-                userInfoDiv.innerHTML = `
-                    <button id="google-signin-btn" class="w-full flex items-center gap-2 justify-center bg-white border border-slate-300 rounded-lg py-2 px-4 hover:bg-slate-100 text-slate-700 font-medium mt-2">
-                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5"> Sign in with Google
-                    </button>
-                `;
-                document.getElementById('google-signin-btn').onclick = handleGoogleSignIn;
-            } else {
-                userInfoDiv.innerHTML = `
-                    <div class="flex items-center gap-3">
-                        <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="w-10 h-10 rounded-full bg-violet-100" alt="User">
-                        <div class="hidden lg:block">
-                            <p class="text-sm font-semibold">${user.displayName || 'Google User'}</p>
-                            <p class="text-xs text-slate-500 break-all">${user.email || user.uid}</p>
-                        </div>
-                        <button id="signout-btn" class="ml-2 px-2 py-1 text-xs bg-slate-200 rounded hover:bg-slate-300">Sign out</button>
-                    </div>
-                `;
-                document.getElementById('signout-btn').onclick = handleSignOut;
-            }
-        }
-
-        async function handleGoogleSignIn() {
-            try {
-                const provider = new GoogleAuthProvider();
-                await signInWithPopup(auth, provider);
-            } catch (error) {
-                showModal('Sign-in Error', `<p>Could not sign in with Google.<br>${error.message}</p>`);
-            }
-        }
-
-        async function handleSignOut() {
-            try {
-                await signOut(auth);
-            } catch (error) {
-                showModal('Sign-out Error', `<p>Could not sign out.<br>${error.message}</p>`);
-            }
-        }
-
         function handleEditTransaction(id) {
             const transaction = transactions.find(t => t.id === id);
             if (transaction) {
@@ -538,36 +477,25 @@
         }
 
         function showPage(pageName, data = {}) {
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-    const pageId = `${pageName}-page`;
-    const pageElement = document.getElementById(pageId);
-    const navElement = document.querySelector(`.nav-item[onclick="showPage('${pageName}')"]`);
-
-    if (pageElement) {
-        pageElement.classList.add('active');
-        // Always call the specific render function to refresh content
-        if(pageName === 'home') {
-            renderHomePage();
-        } else if(pageName === 'add') {
-            renderAddPage(data);
-        } else if(pageName === 'scan') {
-            renderScanPage();
-        } else if(pageName === 'budget') {
-            renderBudgetPage();
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            const pageId = `${pageName}-page`;
+            const pageElement = document.getElementById(pageId);
+            const navElement = document.querySelector(`.nav-item[onclick="showPage('${pageName}')"]`);
+            if (pageElement) {
+                pageElement.classList.add('active');
+                if(pageName === 'home') renderHomePage();
+                else if(pageName === 'add') renderAddPage(data);
+                else if(pageName === 'scan') renderScanPage();
+                else if(pageName === 'budget') renderBudgetPage();
+            }
+            if(navElement) navElement.classList.add('active');
+            let titleText = 'Home';
+            if (pageName === 'add') titleText = data.id ? 'Edit Transaction' : 'Add Transaction';
+            else if (pageName !== 'home') titleText = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+            document.getElementById('page-title').textContent = titleText;
         }
-    }
-
-    if(navElement) navElement.classList.add('active');
-
-    let titleText = 'Home';
-    if (pageName === 'add') titleText = data.id ? 'Edit Transaction' : 'Add Transaction';
-    else if (pageName !== 'home') titleText = pageName.charAt(0).toUpperCase() + pageName.slice(1);
-    document.getElementById('page-title').textContent = titleText;
-}
-window.showPage = showPage;
-        window.showPage = showPage; // Keep this for global access
+        window.showPage = showPage;
 
         function showModal(title, content, showCloseButton = true) {
             const modal = document.getElementById('modal');
