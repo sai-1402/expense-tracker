@@ -93,7 +93,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence, GoogleAuthProvider, signInWithPopup, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, collection, addDoc, getDocs, onSnapshot, query, writeBatch, Timestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
         // --- 1. PASTE YOUR CONFIG & API KEY HERE ---
@@ -144,6 +144,7 @@
                 await setPersistence(auth, browserLocalPersistence);
 
                 onAuthStateChanged(auth, async (user) => {
+                    renderAuthUI(user);
                     if (user) {
                         userId = user.uid;
                         document.getElementById('userIdDisplay').textContent = userId;
@@ -151,7 +152,7 @@
                         setupListeners();
                         showPage('home'); 
                     } else {
-                        await signInAnonymously(auth);
+                        // GoogleサインインUIを表示し、匿名サインインは行わない
                     }
                 });
             } catch (error) {
@@ -380,6 +381,47 @@
             }
         }
         
+        function renderAuthUI(user) {
+            const userInfoDiv = document.getElementById('user-info');
+            if (!user) {
+                userInfoDiv.innerHTML = `
+                    <button id="google-signin-btn" class="w-full flex items-center gap-2 justify-center bg-white border border-slate-300 rounded-lg py-2 px-4 hover:bg-slate-100 text-slate-700 font-medium mt-2">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" class="w-5 h-5"> Sign in with Google
+                    </button>
+                `;
+                document.getElementById('google-signin-btn').onclick = handleGoogleSignIn;
+            } else {
+                userInfoDiv.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <img src="${user.photoURL || 'https://www.gravatar.com/avatar?d=mp'}" class="w-10 h-10 rounded-full bg-violet-100" alt="User">
+                        <div class="hidden lg:block">
+                            <p class="text-sm font-semibold">${user.displayName || 'Google User'}</p>
+                            <p class="text-xs text-slate-500 break-all">${user.email || user.uid}</p>
+                        </div>
+                        <button id="signout-btn" class="ml-2 px-2 py-1 text-xs bg-slate-200 rounded hover:bg-slate-300">Sign out</button>
+                    </div>
+                `;
+                document.getElementById('signout-btn').onclick = handleSignOut;
+            }
+        }
+
+        async function handleGoogleSignIn() {
+            try {
+                const provider = new GoogleAuthProvider();
+                await signInWithPopup(auth, provider);
+            } catch (error) {
+                showModal('Sign-in Error', `<p>Could not sign in with Google.<br>${error.message}</p>`);
+            }
+        }
+
+        async function handleSignOut() {
+            try {
+                await signOut(auth);
+            } catch (error) {
+                showModal('Sign-out Error', `<p>Could not sign out.<br>${error.message}</p>`);
+            }
+        }
+
         function handleEditTransaction(id) {
             const transaction = transactions.find(t => t.id === id);
             if (transaction) {
