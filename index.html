@@ -4,57 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Tracker Pro</title>
-    
-    <!-- Tailwind CSS for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- Google Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
-
     <style>
-        /* Custom styles to complement Tailwind */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* light gray background */
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-        .nav-item.active {
-            background-color: #ede9fe; /* violet-100 */
-            color: #6d28d9; /* violet-700 */
-            font-weight: 600;
-        }
-        .nav-item.active .material-symbols-outlined {
-            font-variation-settings: 'FILL' 1;
-        }
-        /* Custom animation for the scanner */
-        @keyframes pulse {
-            0%, 100% { opacity: 0.6; }
-            50% { opacity: 1; }
-        }
-        .scan-overlay-animation {
-            animation: pulse 2s infinite;
-        }
-        /* Hide scrollbar but allow scrolling */
-        .no-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .no-scrollbar {
-            -ms-overflow-style: none;  /* IE and Edge */
-            scrollbar-width: none;  /* Firefox */
-        }
-        /* Page transition styles */
-        .page {
-            display: none;
-            animation: fadeIn 0.3s ease-in-out;
-        }
-        .page.active {
-            display: block;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
+        .nav-item.active { background-color: #ede9fe; color: #6d28d9; font-weight: 600; }
+        .nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
+        .page { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .page.active { display: block; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
@@ -123,7 +84,7 @@
     
     <!-- Modal for notifications -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
-        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6 animate-fadeIn">
+        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
            <!-- Modal content will be injected here -->
         </div>
     </div>
@@ -132,23 +93,30 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, collection, addDoc, getDocs, onSnapshot, query, where, writeBatch, Timestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, collection, addDoc, getDocs, onSnapshot, query, writeBatch, Timestamp, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
         
-        // --- CONFIG & INITIALIZATION ---
+        // --- 1. PASTE YOUR CONFIG & API KEY HERE ---
+        
+        // Paste the firebaseConfig object from the Firebase console.
         const firebaseConfig = {
-  apiKey: "AIzaSyDr06gBLA2R18Qx8XP1hIjhCT38AzXJwtI",
-  authDomain: "expense-tracker-20dd2.firebaseapp.com",
-  databaseURL: "https://expense-tracker-20dd2-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "expense-tracker-20dd2",
-  storageBucket: "expense-tracker-20dd2.firebasestorage.app",
-  messagingSenderId: "491169353833",
-  appId: "1:491169353833:web:295e5236a54c4db56612f8",
-  measurementId: "G-FEQN4931HH"
-};
-
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'expense-tracker-pro';
+        apiKey: "AIzaSyDr06gBLA2R18Qx8XP1hIjhCT38AzXJwtI",
+        authDomain: "expense-tracker-20dd2.firebaseapp.com",
+        databaseURL: "https://expense-tracker-20dd2-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "expense-tracker-20dd2",
+        storageBucket: "expense-tracker-20dd2.firebasestorage.app",
+        messagingSenderId: "491169353833",
+        appId: "1:491169353833:web:295e5236a54c4db56612f8",
+        measurementId: "G-FEQN4931HH"
+        };  
         
+        // Paste the API Key from Google AI Studio.
+        const geminiApiKey = "AIzaSyA-OwHzReTw2WDW8rM2Djt57lYJnj3S9kg";
+        
+        // --- END OF CONFIGURATION ---
+
+
+        const appId = 'expense-tracker-pro'; // You can change this to a unique name for your app
         let app, auth, db, userId;
         let transactions = [];
         let budgets = {};
@@ -159,13 +127,17 @@
             'Shopping': { icon: '🛍️', type: 'expense' },
             'Health': { icon: '🏥', type: 'expense' },
             'Entertainment': { icon: '🎬', type: 'expense' },
-            'Bills': { icon: '📱', type: 'expense' },
+            'Bills': { icon: '🧾', type: 'expense' },
             'Salary': { icon: '💰', type: 'income' },
             'Other': { icon: '❓', type: 'expense' }
         };
 
         async function initializeFirebase() {
             try {
+                if (!firebaseConfig.apiKey || firebaseConfig.apiKey.includes("PASTE_YOUR")) {
+                     showModal('Configuration Needed', '<p>This application is not configured. Please follow the deployment guide to add your Firebase and Gemini API keys to the index.html file.</p>', false);
+                     return;
+                }
                 app = initializeApp(firebaseConfig);
                 db = getFirestore(app);
                 auth = getAuth(app);
@@ -177,38 +149,25 @@
                         document.getElementById('userIdDisplay').textContent = userId;
                         await setupInitialData();
                         setupListeners();
-                        showPage('home'); // Show home page after login and setup
+                        showPage('home'); 
                     } else {
-                        // If no user, try to sign in
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
+                        await signInAnonymously(auth);
                     }
                 });
             } catch (error) {
                 console.error("Firebase Initialization Error:", error);
-                document.getElementById('content-area').innerHTML = `<div class="text-red-500">Error connecting to the database. Please check console.</div>`;
+                showModal('Initialization Error', `<p>Could not connect to the database. Please check the console for more details.</p>`);
             }
         }
 
         async function setupInitialData() {
-            // Check if budgets are already set up for this user
             const budgetsPath = `/artifacts/${appId}/users/${userId}/budgets`;
             const budgetsQuery = query(collection(db, budgetsPath));
             const budgetSnapshot = await getDocs(budgetsQuery);
 
             if (budgetSnapshot.empty) {
-                // First time user, create default budgets
                 const batch = writeBatch(db);
-                const defaultBudgets = {
-                    'Food': 50000,
-                    'Transport': 20000,
-                    'Shopping': 30000,
-                    'Entertainment': 15000,
-                    'Bills': 40000,
-                };
+                const defaultBudgets = { 'Food': 500, 'Transport': 200, 'Shopping': 300, 'Entertainment': 150, 'Bills': 400 };
                 Object.entries(defaultBudgets).forEach(([name, amount]) => {
                     const budgetRef = doc(collection(db, budgetsPath));
                     batch.set(budgetRef, { name, amount });
@@ -218,31 +177,26 @@
         }
         
         function setupListeners() {
-            // Listen for transaction changes
             const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
             const qTransactions = query(collection(db, transactionsPath));
             onSnapshot(qTransactions, (snapshot) => {
                 transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                // Sort by date, newest first
                 transactions.sort((a, b) => b.date.toMillis() - a.date.toMillis());
                 renderAllPages();
             }, (error) => console.error("Error listening to transactions:", error));
 
-            // Listen for budget changes
             const budgetsPath = `/artifacts/${appId}/users/${userId}/budgets`;
             const qBudgets = query(collection(db, budgetsPath));
             onSnapshot(qBudgets, (snapshot) => {
                 budgets = {};
                 snapshot.docs.forEach(doc => {
-                    const data = doc.data();
-                    budgets[data.name] = { id: doc.id, ...data };
+                    budgets[doc.data().name] = { id: doc.id, ...doc.data() };
                 });
                 renderAllPages();
             }, (error) => console.error("Error listening to budgets:", error));
         }
-
+        
         function renderAllPages() {
-             // Re-render the content of the currently active page to reflect data changes
             const activePageId = document.querySelector('.page.active')?.id;
             if (activePageId) {
                 const pageName = activePageId.replace('-page', '');
@@ -250,14 +204,13 @@
             }
         }
 
-        // --- PAGE RENDERING ---
         function renderHomePage() {
             const expenses = transactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
             const income = transactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
             const balance = income - expenses;
 
             const transactionListHTML = transactions.length > 0 ? transactions.map(t => `
-                <div class="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow group">
                     <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-2xl">${CATEGORIES[t.category]?.icon || '❓'}</div>
                     <div class="flex-1">
                         <p class="font-semibold">${t.description}</p>
@@ -266,23 +219,22 @@
                     <p class="font-bold text-lg ${t.type === 'income' ? 'text-green-600' : 'text-red-600'}">
                         ${t.type === 'income' ? '+' : '-'}${t.amount.toLocaleString()}
                     </p>
+                    <div class="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button onclick="handleEditTransaction('${t.id}')" class="p-2 rounded-md bg-slate-100 hover:bg-blue-100 text-blue-600" title="Edit">
+                            <span class="material-symbols-outlined text-base">edit</span>
+                         </button>
+                         <button onclick="handleDeleteTransaction('${t.id}')" class="p-2 rounded-md bg-slate-100 hover:bg-red-100 text-red-600" title="Delete">
+                            <span class="material-symbols-outlined text-base">delete</span>
+                         </button>
+                    </div>
                 </div>
             `).join('') : '<p class="text-center text-slate-500 py-8">No transactions yet. Add one to get started!</p>';
 
             document.getElementById('home-page').innerHTML = `
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h3 class="text-slate-500 font-medium">Total Income</h3>
-                        <p class="text-3xl font-bold text-green-600 mt-2">+${income.toLocaleString()}</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h3 class="text-slate-500 font-medium">Total Expenses</h3>
-                        <p class="text-3xl font-bold text-red-600 mt-2">-${expenses.toLocaleString()}</p>
-                    </div>
-                    <div class="bg-white p-6 rounded-xl shadow-sm">
-                        <h3 class="text-slate-500 font-medium">Net Balance</h3>
-                        <p class="text-3xl font-bold text-slate-800 mt-2">${balance.toLocaleString()}</p>
-                    </div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm"><h3 class="text-slate-500 font-medium">Total Income</h3><p class="text-3xl font-bold text-green-600 mt-2">+${income.toLocaleString()}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm"><h3 class="text-slate-500 font-medium">Total Expenses</h3><p class="text-3xl font-bold text-red-600 mt-2">-${expenses.toLocaleString()}</p></div>
+                    <div class="bg-white p-6 rounded-xl shadow-sm"><h3 class="text-slate-500 font-medium">Net Balance</h3><p class="text-3xl font-bold text-slate-800 mt-2">${balance.toLocaleString()}</p></div>
                 </div>
                 <h2 class="text-2xl font-bold mb-4">Recent Transactions</h2>
                 <div class="space-y-4">${transactionListHTML}</div>
@@ -300,103 +252,61 @@
             
             document.getElementById('add-page').innerHTML = `
                 <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-sm">
-                    <form id="add-transaction-form">
-                        <div class="mb-6">
-                            <label for="amount" class="block text-sm font-medium text-slate-700 mb-2">Amount</label>
-                            <input type="number" id="amount" name="amount" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition" placeholder="0.00" value="${prefill.amount || ''}" required>
-                        </div>
-                        <div class="mb-6">
-                            <label for="description" class="block text-sm font-medium text-slate-700 mb-2">Description</label>
-                            <input type="text" id="description" name="description" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition" placeholder="e.g., Lunch with team" value="${prefill.description || ''}" required>
-                        </div>
-                        <div class="mb-6">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Category</label>
-                            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">${categoryOptionsHTML}</div>
-                        </div>
-                        <div class="mb-8">
-                            <label for="date" class="block text-sm font-medium text-slate-700 mb-2">Date</label>
-                            <input type="date" id="date" name="date" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition" value="${prefill.date || new Date().toISOString().split('T')[0]}" required>
-                        </div>
-                        <button type="submit" class="w-full bg-violet-600 text-white font-bold py-4 px-4 rounded-lg hover:bg-violet-700 transition-transform duration-200 transform hover:-translate-y-1 shadow-md">Add Transaction</button>
+                    <form id="transaction-form" data-id="${prefill.id || ''}">
+                        <div class="mb-6"><label for="amount" class="block text-sm font-medium text-slate-700 mb-2">Amount</label><input type="number" id="amount" name="amount" step="0.01" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition" placeholder="0.00" value="${prefill.amount || ''}" required></div>
+                        <div class="mb-6"><label for="description" class="block text-sm font-medium text-slate-700 mb-2">Description</label><input type="text" id="description" name="description" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition" placeholder="e.g., Lunch with team" value="${prefill.description || ''}" required></div>
+                        <div class="mb-6"><label class="block text-sm font-medium text-slate-700 mb-2">Category</label><div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">${categoryOptionsHTML}</div></div>
+                        <div class="mb-8"><label for="date" class="block text-sm font-medium text-slate-700 mb-2">Date</label><input type="date" id="date" name="date" class="w-full p-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-violet-500 focus:border-violet-500 transition" value="${prefill.date || new Date().toISOString().split('T')[0]}" required></div>
+                        <button type="submit" class="w-full bg-violet-600 text-white font-bold py-4 px-4 rounded-lg hover:bg-violet-700 transition-transform duration-200 transform hover:-translate-y-1 shadow-md">${prefill.id ? 'Update' : 'Add'} Transaction</button>
                     </form>
                 </div>
             `;
-            // Add form submission listener
-            document.getElementById('add-transaction-form').addEventListener('submit', handleAddTransaction);
+            document.getElementById('transaction-form').addEventListener('submit', handleSaveTransaction);
         }
 
         function renderScanPage() {
             document.getElementById('scan-page').innerHTML = `
                 <div class="max-w-2xl mx-auto text-center">
                     <h2 class="text-2xl font-bold mb-4">Scan Receipt</h2>
-                    <p class="text-slate-500 mb-8">Center your receipt in the frame below and click the scan button.</p>
-                    <div class="relative aspect-video bg-slate-800 rounded-2xl overflow-hidden mb-6 flex items-center justify-center p-4">
-                        <div class="absolute inset-4 border-2 border-dashed border-slate-400 rounded-xl scan-overlay-animation"></div>
-                         <div class="z-10 text-slate-300 flex flex-col items-center">
-                            <span class="material-symbols-outlined text-6xl">document_scanner</span>
-                            <p>Camera view</p>
+                    <p class="text-slate-500 mb-8">Upload an image of your receipt to automatically extract the details.</p>
+                    <div class="relative border-2 border-dashed border-slate-300 rounded-2xl p-8 hover:border-violet-400 hover:bg-violet-50 transition-colors">
+                        <input type="file" id="receipt-upload" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer" accept="image/*">
+                        <div class="flex flex-col items-center text-slate-500 pointer-events-none">
+                            <span class="material-symbols-outlined text-6xl text-violet-500">upload_file</span>
+                            <p class="mt-2 font-semibold">Click to upload or drag & drop</p>
+                            <p class="text-sm">PNG, JPG, or WEBP</p>
                         </div>
                     </div>
-                    <button id="scan-btn" class="bg-violet-600 text-white font-bold py-4 px-8 rounded-lg hover:bg-violet-700 transition-transform duration-200 transform hover:-translate-y-1 shadow-md inline-flex items-center gap-2">
-                        <span class="material-symbols-outlined">camera</span>
-                        Start Scan
-                    </button>
                 </div>
             `;
-            document.getElementById('scan-btn').addEventListener('click', handleScan);
+            document.getElementById('receipt-upload').addEventListener('change', handleReceiptUpload);
         }
 
         function renderBudgetPage() {
-            const spentByCategory = transactions
-                .filter(t => t.type === 'expense')
-                .reduce((acc, t) => {
-                    if (!acc[t.category]) {
-                        acc[t.category] = 0;
-                    }
-                    acc[t.category] += t.amount;
-                    return acc;
-                }, {});
+             const spentByCategory = transactions.filter(t => t.type === 'expense').reduce((acc, t) => {
+                acc[t.category] = (acc[t.category] || 0) + t.amount;
+                return acc;
+            }, {});
             
-            const budgetListHTML = Object.keys(budgets).length > 0 ? Object.values(budgets).map(budget => {
+            const budgetListHTML = Object.values(budgets).map(budget => {
                 const spent = spentByCategory[budget.name] || 0;
-                const remaining = budget.amount - spent;
                 const percentage = Math.min(Math.floor((spent / budget.amount) * 100), 100);
                 const progressBarColor = percentage > 90 ? 'bg-red-500' : percentage > 70 ? 'bg-amber-500' : 'bg-violet-500';
+                return `<div class="bg-white p-5 rounded-xl shadow-sm"><div class="flex justify-between items-center mb-2"><p class="font-semibold text-lg">${CATEGORIES[budget.name]?.icon || '❓'} ${budget.name}</p><p class="font-bold">${percentage}%</p></div><div class="w-full bg-slate-200 rounded-full h-2.5 mb-2"><div class="${progressBarColor} h-2.5 rounded-full" style="width: ${percentage}%"></div></div><div class="flex justify-between items-center text-sm text-slate-500"><span>Spent: ${spent.toLocaleString()}</span><span>Budget: ${budget.amount.toLocaleString()}</span></div></div>`;
+            }).join('') || '<p class="text-center text-slate-500 py-8">No budgets set up yet.</p>';
 
-                return `
-                    <div class="bg-white p-5 rounded-xl shadow-sm">
-                        <div class="flex justify-between items-center mb-2">
-                            <p class="font-semibold text-lg">${CATEGORIES[budget.name]?.icon || '❓'} ${budget.name}</p>
-                            <p class="font-bold">${percentage}%</p>
-                        </div>
-                        <div class="w-full bg-slate-200 rounded-full h-2.5 mb-2">
-                            <div class="${progressBarColor} h-2.5 rounded-full" style="width: ${percentage}%"></div>
-                        </div>
-                        <div class="flex justify-between items-center text-sm text-slate-500">
-                            <span>Spent: ${spent.toLocaleString()}</span>
-                            <span>Budget: ${budget.amount.toLocaleString()}</span>
-                        </div>
-                    </div>
-                `;
-            }).join('') : '<p class="text-center text-slate-500 py-8">No budgets set up. Go to settings to create them.</p>';
-
-            document.getElementById('budget-page').innerHTML = `
-                <h2 class="text-2xl font-bold mb-6">Your Budgets</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    ${budgetListHTML}
-                </div>
-            `;
+            document.getElementById('budget-page').innerHTML = `<h2 class="text-2xl font-bold mb-6">Your Budgets</h2><div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">${budgetListHTML}</div>`;
         }
 
-        // --- EVENT HANDLERS & LOGIC ---
-        async function handleAddTransaction(event) {
+        async function handleSaveTransaction(event) {
             event.preventDefault();
             const form = event.target;
+            const transactionId = form.dataset.id;
             const formData = new FormData(form);
             const category = formData.get('category');
             
             if (!category) {
-                showModal('Error', '<p>Please select a category for your transaction.</p>');
+                showModal('Error', '<p>Please select a category.</p>');
                 return;
             }
 
@@ -407,57 +317,126 @@
                 date: Timestamp.fromDate(new Date(formData.get('date'))),
                 type: CATEGORIES[category]?.type || 'expense'
             };
+            
+            const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
 
             try {
-                const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
-                await addDoc(collection(db, transactionsPath), transactionData);
-                showModal('Success!', '<p>Your transaction has been added successfully.</p>');
+                if (transactionId) {
+                    await updateDoc(doc(db, transactionsPath, transactionId), transactionData);
+                    showModal('Success!', '<p>Transaction updated successfully.</p>');
+                } else {
+                    await addDoc(collection(db, transactionsPath), transactionData);
+                    showModal('Success!', '<p>Transaction added successfully.</p>');
+                }
                 showPage('home');
             } catch (error) {
-                console.error("Error adding document: ", error);
-                showModal('Error', `<p>There was an issue saving your transaction. Please try again.</p><p class="text-xs text-slate-400 mt-2">${error.message}</p>`);
+                console.error("Error saving transaction: ", error);
+                showModal('Error', `<p>Could not save the transaction. Please try again.</p>`);
             }
         }
         
-        function handleScan() {
-             showModal('Scanning...', `
-                <div class="text-center">
-                    <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-violet-600 mx-auto"></div>
-                    <p class="mt-4 text-slate-600">Analyzing receipt, please wait...</p>
-                </div>
-            `, false); // show without close button
-            
-            setTimeout(() => {
-                const randomAmount = (Math.random() * 5000 + 500).toFixed(2);
-                const randomCategory = Object.keys(CATEGORIES).filter(c => CATEGORIES[c].type === 'expense')[Math.floor(Math.random() * 6)];
+        function handleEditTransaction(id) {
+            const transaction = transactions.find(t => t.id === id);
+            if (transaction) {
+                 const prefillData = {
+                    ...transaction,
+                    date: transaction.date.toDate().toISOString().split('T')[0]
+                 };
+                showPage('add', prefillData);
+            }
+        }
+        window.handleEditTransaction = handleEditTransaction;
 
-                // Close the "scanning" modal
+        function handleDeleteTransaction(id) {
+             showModal('Confirm Deletion', `
+                <p>Are you sure you want to delete this transaction? This action cannot be undone.</p>
+                <div class="flex justify-end gap-4 mt-6">
+                    <button id="modal-cancel-btn" class="py-2 px-4 rounded-lg bg-slate-200 hover:bg-slate-300">Cancel</button>
+                    <button id="modal-confirm-delete-btn" class="py-2 px-4 rounded-lg bg-red-600 text-white hover:bg-red-700">Delete</button>
+                </div>
+            `, false);
+
+            document.getElementById('modal-cancel-btn').onclick = () => document.getElementById('modal').classList.add('hidden');
+            document.getElementById('modal-confirm-delete-btn').onclick = async () => {
+                try {
+                    const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
+                    await deleteDoc(doc(db, transactionsPath, id));
+                    document.getElementById('modal').classList.add('hidden');
+                } catch (error) {
+                    console.error("Error deleting transaction: ", error);
+                    showModal('Error', '<p>Could not delete the transaction. Please try again.</p>');
+                }
+            };
+        }
+        window.handleDeleteTransaction = handleDeleteTransaction;
+
+        function handleReceiptUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const base64ImageData = e.target.result.split(',')[1];
+                showModal('Scanning...', `<div class="text-center"><div class="animate-spin rounded-full h-16 w-16 border-b-2 border-violet-600 mx-auto"></div><p class="mt-4 text-slate-600">Analyzing receipt, please wait...</p></div>`, false);
+                await extractDataFromReceipt(base64ImageData);
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        async function extractDataFromReceipt(base64ImageData) {
+            if (!geminiApiKey || geminiApiKey.includes("PASTE_YOUR")) {
+                showModal('Configuration Needed', '<p>The receipt scanning feature is not configured. Please add your Gemini API key to the index.html file.</p>');
+                return;
+            }
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${geminiApiKey}`;
+            const prompt = `Analyze this receipt image and extract the total amount, the merchant name or a brief description, and suggest a category. Categories: ${Object.keys(CATEGORIES).join(', ')}.`;
+
+            const payload = {
+                contents: [{
+                    parts: [
+                        { text: prompt },
+                        { inlineData: { mimeType: "image/png", data: base64ImageData } }
+                    ]
+                }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            "amount": { "type": "NUMBER" },
+                            "description": { "type": "STRING" },
+                            "category": { "type": "STRING", "enum": Object.keys(CATEGORIES) }
+                        },
+                        required: ["amount", "description", "category"]
+                    }
+                }
+            };
+
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                const result = await response.json();
+                const text = result.candidates[0].content.parts[0].text;
+                const data = JSON.parse(text);
                 document.getElementById('modal').classList.add('hidden');
-                
-                // Prefill the add page with scanned data
                 showPage('add', {
-                    amount: randomAmount,
-                    description: 'Scanned Receipt Item',
-                    category: randomCategory,
+                    amount: data.amount || '',
+                    description: data.description || 'Scanned Item',
+                    category: data.category || 'Other',
                     date: new Date().toISOString().split('T')[0]
                 });
-
-            }, 2500);
+            } catch (error) {
+                console.error('Error processing receipt:', error);
+                showModal('Scan Failed', '<p>Sorry, I couldn\'t read the details from that receipt. Please enter them manually.</p>');
+            }
         }
 
-        // --- UTILITY FUNCTIONS ---
         function showPage(pageName, data = {}) {
-            // Hide all pages
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            
-            // Deactivate all nav items
             document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-
-            // Activate the selected page and nav item
             const pageId = `${pageName}-page`;
             const pageElement = document.getElementById(pageId);
             const navElement = document.querySelector(`.nav-item[onclick="showPage('${pageName}')"]`);
-
             if (pageElement) {
                 pageElement.classList.add('active');
                 if(pageName === 'home') renderHomePage();
@@ -466,35 +445,24 @@
                 else if(pageName === 'budget') renderBudgetPage();
             }
             if(navElement) navElement.classList.add('active');
-
-            // Update header title
-            const title = pageName.charAt(0).toUpperCase() + pageName.slice(1).replace(/([A-Z])/g, ' $1').trim();
-            document.getElementById('page-title').textContent = title === 'Add' ? 'Add Transaction' : title;
+            let titleText = 'Home';
+            if (pageName === 'add') titleText = data.id ? 'Edit Transaction' : 'Add Transaction';
+            else if (pageName !== 'home') titleText = pageName.charAt(0).toUpperCase() + pageName.slice(1);
+            document.getElementById('page-title').textContent = titleText;
         }
         window.showPage = showPage;
 
         function showModal(title, content, showCloseButton = true) {
             const modal = document.getElementById('modal');
             const modalContent = document.getElementById('modal-content');
-            modalContent.innerHTML = `
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-xl font-bold">${title}</h2>
-                    ${showCloseButton ? '<button id="modal-close-btn" class="text-slate-500 hover:text-slate-800">&times;</button>' : ''}
-                </div>
-                <div>${content}</div>
-            `;
+            modalContent.innerHTML = `<div class="flex justify-between items-center mb-4"><h2 class="text-xl font-bold">${title}</h2>${showCloseButton ? '<button id="modal-close-btn" class="p-1 text-2xl leading-none text-slate-500 hover:text-slate-800">&times;</button>' : ''}</div><div>${content}</div>`;
             modal.classList.remove('hidden');
-
             if(showCloseButton) {
-                document.getElementById('modal-close-btn').addEventListener('click', () => {
-                    modal.classList.add('hidden');
-                });
+                document.getElementById('modal-close-btn').onclick = () => modal.classList.add('hidden');
             }
         }
         
-        // --- START THE APP ---
         document.addEventListener('DOMContentLoaded', initializeFirebase);
-
     </script>
 </body>
 </html>
