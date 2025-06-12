@@ -120,6 +120,8 @@
         let app, auth, db, userId;
         let transactions = [];
         let budgets = {};
+        let unsubscribeTransactions = null;
+        let unsubscribeBudgets = null;
         
         const CATEGORIES = {
             'Food': { icon: '🍽️', type: 'expense' },
@@ -178,9 +180,13 @@
         }
         
         function setupListeners() {
+            // 既存リスナーがあれば解除
+            if (typeof unsubscribeTransactions === 'function') unsubscribeTransactions();
+            if (typeof unsubscribeBudgets === 'function') unsubscribeBudgets();
+
             const transactionsPath = `/artifacts/${appId}/users/${userId}/transactions`;
             const qTransactions = query(collection(db, transactionsPath));
-            onSnapshot(qTransactions, (snapshot) => {
+            unsubscribeTransactions = onSnapshot(qTransactions, (snapshot) => {
                 transactions = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 transactions.sort((a, b) => b.date.toMillis() - a.date.toMillis());
                 renderAllPages();
@@ -188,7 +194,7 @@
 
             const budgetsPath = `/artifacts/${appId}/users/${userId}/budgets`;
             const qBudgets = query(collection(db, budgetsPath));
-            onSnapshot(qBudgets, (snapshot) => {
+            unsubscribeBudgets = onSnapshot(qBudgets, (snapshot) => {
                 budgets = {};
                 snapshot.docs.forEach(doc => {
                     budgets[doc.data().name] = { id: doc.id, ...doc.data() };
