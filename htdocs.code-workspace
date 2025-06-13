@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "../../../../../Applications/MAMP/htdocs"
+		},
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"liveServer.settings.multiRootWorkspaceName": "expense-tracker"
+	}
+}

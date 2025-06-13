@@ -1,0 +1,28 @@
+{
+  "name": "expense-tracker",
+  "version": "1.0.0",
+  "description": "A web application for tracking expenses and managing budgets.",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "live-server public",
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development"
+  },
+  "dependencies": {
+    "firebase": "^11.6.1",
+    "tailwindcss": "^2.2.19"
+  },
+  "devDependencies": {
+    "webpack": "^5.64.4",
+    "webpack-cli": "^4.9.1",
+    "live-server": "^1.2.1"
+  },
+  "keywords": [
+    "expense",
+    "tracker",
+    "budget",
+    "firebase"
+  ],
+  "author": "Your Name",
+  "license": "MIT"
+}

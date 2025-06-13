@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Tracker Pro</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -12,16 +12,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24; }
-        .nav-item.active { background-color: #ede9fe; color: #6d28d9; font-weight: 600; }
-        .nav-item.active .material-symbols-outlined { font-variation-settings: 'FILL' 1; }
-        .page { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .page.active { display: block; }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
-    <script type="module" src="src/main.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800">
 
@@ -32,26 +23,9 @@
                 <span class="material-symbols-outlined text-3xl text-violet-600">account_balance_wallet</span>
                 <span class="text-xl font-bold text-slate-800 hidden lg:block">MoneyMap</span>
             </div>
-            <ul class="flex-1 py-4 flex flex-col gap-2 px-4">
-                <li><a href="#" onclick="showPage('home')" class="nav-item flex items-center gap-4 p-3 rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                    <span class="material-symbols-outlined">home</span>
-                    <span class="hidden lg:block">Home</span>
-                </a></li>
-                <li><a href="#" onclick="showPage('add')" class="nav-item flex items-center gap-4 p-3 rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                    <span class="material-symbols-outlined">add_circle</span>
-                    <span class="hidden lg:block">Add Transaction</span>
-                </a></li>
-                <li><a href="#" onclick="showPage('scan')" class="nav-item flex items-center gap-4 p-3 rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                    <span class="material-symbols-outlined">qr_code_scanner</span>
-                    <span class="hidden lg:block">Scan Receipt</span>
-                </a></li>
-                 <li><a href="#" onclick="showPage('budget')" class="nav-item flex items-center gap-4 p-3 rounded-lg hover:bg-slate-100 transition-colors duration-200">
-                    <span class="material-symbols-outlined">savings</span>
-                    <span class="hidden lg:block">Budgets</span>
-                </a></li>
-            </ul>
+            <ul class="flex-1 py-4 flex flex-col gap-2 px-4" id="navigation"></ul>
             <div id="user-info" class="border-t border-slate-200 p-4">
-                 <div class="flex items-center gap-3">
+                <div class="flex items-center gap-3">
                     <div class="w-10 h-10 rounded-full bg-violet-100 flex items-center justify-center">
                         <span class="material-symbols-outlined text-violet-600">person</span>
                     </div>
@@ -65,7 +39,6 @@
 
         <!-- Main Content -->
         <main class="flex-1 flex flex-col h-screen">
-             <!-- Header -->
             <header class="flex items-center justify-between h-16 bg-white border-b border-slate-200 px-6">
                 <h1 id="page-title" class="text-xl font-bold text-slate-800">Home</h1>
                 <button onclick="showPage('add')" class="flex lg:hidden items-center justify-center w-10 h-10 bg-violet-600 text-white rounded-full shadow-md hover:bg-violet-700 transition-colors">
@@ -74,7 +47,6 @@
             </header>
             
             <div id="content-area" class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-                <!-- Pages will be injected here -->
                 <div id="home-page" class="page"></div>
                 <div id="add-page" class="page"></div>
                 <div id="scan-page" class="page"></div>
@@ -85,9 +57,9 @@
     
     <!-- Modal for notifications -->
     <div id="modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 hidden">
-        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6">
-           <!-- Modal content will be injected here -->
-        </div>
+        <div id="modal-content" class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"></div>
     </div>
+
+    <script type="module" src="../src/main.js"></script>
 </body>
 </html>
