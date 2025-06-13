@@ -4,6 +4,8 @@ import { listenTransactions } from "./transactions.js";
 import { showPage } from "./ui/navigation.js";
 import { showModal } from "./ui/modal.js";
 
+window.showPage = showPage;
+
 function renderAllPages() {
   const activePageId = document.querySelector('.page.active')?.id;
   if (activePageId) {
